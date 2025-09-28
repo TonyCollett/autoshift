@@ -2,17 +2,18 @@
 
 - **Compatibility:** 3.9+.
 - **Platform:** Crossplatform.
-- **Repo:** https://github.com/TonyCollett/autoshift forked from https://github.com/ugoogalizer/autoshift forked from https://github.com/Fabbi/autoshift
+- **Repo:** https://github.com/ghcr.io/TonyCollett/autoshift forked from https://github.com/ugoogalizer/autoshift forked from https://github.com/Fabbi/autoshift
 
 # Overview
- 
-Data provided by Mental Mars' Websites via this [shiftcodes.json](https://raw.githubusercontent.com/TonyCollett/autoshift-codes/main/shiftcodes.json) file that is updated reguarly by an instance of [this scraper](https://github.com/TonyCollett/autoshift-scraper).  You don't need to run the scraper as well, only this `autoshift` script/container.  This is to reduce the burden on the Mental Mars website given the great work they're doing to make this possible.<br>
+
+Data provided by Mental Mars' Websites via this [shiftcodes.json](https://raw.githubusercontent.com/ghcr.io/TonyCollett/autoshift-codes/main/shiftcodes.json) file that is updated reguarly by an instance of [this scraper](https://github.com/ghcr.io/TonyCollett/autoshift-scraper). You don't need to run the scraper as well, only this `autoshift` script/container. This is to reduce the burden on the Mental Mars website given the great work they're doing to make this possible.<br>
 
 This documentation intended to be temporary until Issue [#53](https://github.com/Fabbi/autoshift/issues/53) and PR [#54](https://github.com/Fabbi/autoshift/pull/54) in the the upstream [autoshift by Fabbi](https://github.com/Fabbi/autoshift/) is merged in.
 
 `autoshift` detects and memorizes new games and platforms added to the orcicorn shift key database.
 
-Games currently maintained by mental mars that are scraped and made available to `autoshift` are: 
+Games currently maintained by mental mars that are scraped and made available to `autoshift` are:
+
 - [Borderlands](https://mentalmars.com/game-news/borderlands-golden-keys/)
 - [Borderlands 2](https://mentalmars.com/game-news/borderlands-2-golden-keys/)
 - [Borderlands 3](https://mentalmars.com/game-news/borderlands-3-golden-keys/)
@@ -22,7 +23,7 @@ Games currently maintained by mental mars that are scraped and made available to
 
 To see which games and platforms are supported use the `auto.py --help` command.
 
-*This tool doesn't save your login data anywhere on your machine!*
+_This tool doesn't save your login data anywhere on your machine!_
 After your first login your login-cookie (a string of seemingly random characters) is saved to the `data` folder and reused every time you use `autoshift` after that.
 
 `autoshift` tries to prevent being blocked when it redeems too many keys at once.
@@ -32,7 +33,7 @@ You can choose to only redeem mods/skins etc, only golden keys or both. There is
 ## Installation
 
 ```sh
-git clone git@github.com:TonyCollett/autoshift.git
+git clone git@github.com:ghcr.io/TonyCollett/autoshift.git
 ```
 
 or download it as zip
@@ -50,46 +51,55 @@ mkdir -p ./data
 ## Usage
 
 - for help
+
 ```sh
 ./auto.py --help
 ```
 
 - redeem codes for Borderlands 3 on Steam
+
 ```sh
 ./auto.py --game bl3 --platform steam
 ```
 
 - redeem codes for Borderlands 3 on Steam using Username and Password (Use quotes for User and Password)
+
 ```sh
 ./auto.py --game bl3 --platform steam --user "my@user.edu" --pass "p4ssw0rd!123"
 ```
 
 - keep redeeming every 2 hours
+
 ```sh
 ./auto.py --game bl3 --platform steam --schedule
 ```
 
 - keep redeeming every `n` hours (values < 2 are not possible due to IP Bans)
+
 ```sh
 ./auto.py --game bl3 --platform steam --schedule 5 # redeem every 5 hours
 ```
 
 - only redeem golden keys
+
 ```sh
 ./auto.py --game bl3 --platform steam --schedule --golden
 ```
 
 - only redeem non-golden keys
+
 ```sh
 ./auto.py --game bl3 --platform steam --schedule --non-golden
 ```
 
 - only redeem up to 30 keys
+
 ```sh
 ./auto.py --game bl3 --platform steam --schedule --golden --limit 30
 ```
 
 - only query new keys (why though..)
+
 ```sh
 ./auto.py --game bl3 --platform steam --golden --limit 0
 ```
@@ -108,7 +118,6 @@ It queries login credentials on first use and saves the needed cookie to enable 
 This module parses the codes from wherever they may come from and creates/maintains the database.
 If you'd want to add other sources for SHiFT codes or future games, you'd make that here.
 
-
 ### `auto.py`
 
 This one is the commandline interface you call to use this tool.
@@ -119,7 +128,7 @@ Available as a docker image based on `python3.10-buster`
 
 ## Docker Usage
 
-``` bash
+```bash
 docker run \
   --restart=always \
   -e SHIFT_USER='<username>' \
@@ -129,17 +138,17 @@ docker run \
   -e SHIFT_ARGS='--schedule -v' \
   -e TZ='America/Chicago' \
   -v autoshift:/autoshift/data \
-  TonyCollett/autoshift:latest
+  ghcr.io/TonyCollett/autoshift:latest
 ```
 
 ## Docker Compose Usage:
 
-``` yaml
+```yaml
 ---
 version: "3.0"
 services:
   autoshift:
-    image: TonyCollett/autoshift:latest
+    image: ghcr.io/TonyCollett/autoshift:latest
     container_name: autoshift_all
     restart: always
     volumes:
@@ -152,21 +161,24 @@ services:
       - SHIFT_GAMES=bl3 bl4 blps bl2 bl1 ttw gdfll
       - SHIFT_ARGS=--schedule -v
 ```
+
 ## Kubernetes Usage:
 
-After setting up the secrets in K8s first: 
+After setting up the secrets in K8s first:
+
 ```bash
 kubectl create namespace autoshift
 kubectl config set-context --current --namespace=autoshift
 kubectl create secret generic autoshift-secret --from-literal=username='XXX' --from-literal=password='XXX'
 
-# To get/check the username and password use: 
+# To get/check the username and password use:
 kubectl get secret autoshift-secret -o jsonpath="{.data.username}" | base64 -d
 kubectl get secret autoshift-secret -o jsonpath="{.data.password}" | base64 -d
 ```
-Then deploy with something similar to: 
-``` yaml
 
+Then deploy with something similar to:
+
+```yaml
 --- # deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -189,7 +201,7 @@ spec:
         - name: autoshift
           # Fix version so it doesn't auto-update
           #image: fabianschweinfurth/autoshift@sha256:4cc0232e371f574c992fa7df3290f3fd037f4c36e4cc00c79f8228634bb08550
-          image: TonyCollett/autoshift/autoshift:1.8
+          image: ghcr.io/TonyCollett/autoshift/autoshift:1.8
           imagePullPolicy: IfNotPresent
           env:
             - name: SHIFT_USER
@@ -239,75 +251,75 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ```
 
 ## Variables
 
 #### **SHIFT_USER** (required)
+
 The username/email for your SHiFT account
 
 Example: `johndoe123`
 
-
 #### **SHIFT_PASS** (required)
+
 The password for your SHiFT account
 
 Example: `p@ssw0rd`
 
-
 #### **SHIFT_GAMES** (recommended)
+
 The game(s) you want to redeem codes for
 
 Default: `bl3 blps bl2 bl`
 
 Example: `blps` or `bl bl2 bl3`
 
-|Game|Code|
-|---|---|
-|Borderlands|`bl1`|
-|Borderlands 2|`bl2`|
-|Borderlands: The Pre-Sequel|`blps`|
-|Borderlands 3|`bl3`|
-|Borderlands 4|`bl4`|
-|Tiny Tina's Wonderlands|`ttw`|
-|Godfall|`gdfll`|
-
+| Game                        | Code    |
+| --------------------------- | ------- |
+| Borderlands                 | `bl1`   |
+| Borderlands 2               | `bl2`   |
+| Borderlands: The Pre-Sequel | `blps`  |
+| Borderlands 3               | `bl3`   |
+| Borderlands 4               | `bl4`   |
+| Tiny Tina's Wonderlands     | `ttw`   |
+| Godfall                     | `gdfll` |
 
 #### **SHIFT_PLATFORM** (recommended)
+
 The platform(s) you want to redeem codes for
 
 Default: `epic steam`
 
 Example: `xbox` or `xbox ps`
 
-|Platform|Code|
-|---|---|
-|PC (Epic)|`epic`|
-|PC (Steam)|`steam`|
-|Xbox|`xboxlive`|
-|Playstation|`psn`|
-|Stadia|`stadia`|
-|Nintendo|`nintendo`|
-
+| Platform    | Code       |
+| ----------- | ---------- |
+| PC (Epic)   | `epic`     |
+| PC (Steam)  | `steam`    |
+| Xbox        | `xboxlive` |
+| Playstation | `psn`      |
+| Stadia      | `stadia`   |
+| Nintendo    | `nintendo` |
 
 #### **SHIFT_ARGS** (optional)
+
 Additional arguments to pass to the script
 
 Default: `--schedule`
 
 Example: `--schedule --golden --limit 30`
 
-|Arg|Description|
-|---|---|
-|`--golden`|Only redeem golden keys|
-|`--non-golden`|Only redeem non-golden keys|
-|`--limit n`|Max number of golden keys you want to redeem|
-|`--schedule`|Keep checking for keys and redeeming every hour|
-|`-v`|Verbose mode|
-
+| Arg            | Description                                     |
+| -------------- | ----------------------------------------------- |
+| `--golden`     | Only redeem golden keys                         |
+| `--non-golden` | Only redeem non-golden keys                     |
+| `--limit n`    | Max number of golden keys you want to redeem    |
+| `--schedule`   | Keep checking for keys and redeeming every hour |
+| `-v`           | Verbose mode                                    |
 
 #### **TZ** (optional)
+
 Your timezone
 
 Default: `America/Chicago`
@@ -316,20 +328,20 @@ Example: `Europe/London`
 
 ## CI/CD
 
-Docker images are automatically built and pushed to the GitHub Container Registry (GHCR) on every push to the `main` branch and on new releases. You can pull the latest image from `ghcr.io/TonyCollett/autoshift:latest`.
+Docker images are automatically built and pushed to the GitHub Container Registry (GHCR) on every push to the `main` branch and on new releases. You can pull the latest image from `ghcr.io/ghcr.io/TonyCollett/autoshift:latest`.
 
 ## Building Docker Image
 
-``` bash
+```bash
 docker build -t autoshift:latest .
 
 ```
 
 ## Building Docker Image and Pushing to local Harbor and/or Docker Hub
 
-``` bash
+```bash
 
-# Once off setup: 
+# Once off setup:
 git clone TODO
 
 # Personal parameters
@@ -341,9 +353,9 @@ git pull
 export VERSIONTAG=1.8
 
 #Build the Image
-docker build -t autoshift:latest -t autoshift:${VERSIONTAG} . 
+docker build -t autoshift:latest -t autoshift:${VERSIONTAG} .
 
-#Get the image name, it will be something like 41d81c9c2d99: 
+#Get the image name, it will be something like 41d81c9c2d99:
 export IMAGE=$(docker images -q autoshift:latest)
 echo ${IMAGE}
 
@@ -357,10 +369,10 @@ docker push ${HARBORURL}:443/autoshift/autoshift:latest
 docker push ${HARBORURL}:443/autoshift/autoshift:${VERSIONTAG}
 
 #Tag and Push the image to public docker hub repo
-docker login -u TonyCollett docker.io/TonyCollett/autoshift
-docker tag ${IMAGE} docker.io/TonyCollett/autoshift:latest
-docker tag ${IMAGE} docker.io/TonyCollett/autoshift:${VERSIONTAG}
-docker push docker.io/TonyCollett/autoshift:latest
-docker push docker.io/TonyCollett/autoshift:${VERSIONTAG}
+docker login -u ghcr.io/TonyCollett docker.io/ghcr.io/TonyCollett/autoshift
+docker tag ${IMAGE} docker.io/ghcr.io/TonyCollett/autoshift:latest
+docker tag ${IMAGE} docker.io/ghcr.io/TonyCollett/autoshift:${VERSIONTAG}
+docker push docker.io/ghcr.io/TonyCollett/autoshift:latest
+docker push docker.io/ghcr.io/TonyCollett/autoshift:${VERSIONTAG}
 
 ```
