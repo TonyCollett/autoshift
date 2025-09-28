@@ -16,6 +16,7 @@ Games currently maintained by mental mars that are scraped and made available to
 - [Borderlands](https://mentalmars.com/game-news/borderlands-golden-keys/)
 - [Borderlands 2](https://mentalmars.com/game-news/borderlands-2-golden-keys/)
 - [Borderlands 3](https://mentalmars.com/game-news/borderlands-3-golden-keys/)
+- [Borderlands 4](https://mentalmars.com/game-news/borderlands-4-shift-codes/)
 - [Borderlands The Pre-Sequel](https://mentalmars.com/game-news/bltps-golden-keys/)
 - [Tiny Tina's Wonderlands](https://mentalmars.com/game-news/tiny-tinas-wonderlands-shift-codes)
 
@@ -123,7 +124,7 @@ docker run \
   --restart=always \
   -e SHIFT_USER='<username>' \
   -e SHIFT_PASS='<password>' \
-  -e SHIFT_GAMES='bl3 blps bl2 bl1 ttw' \
+  -e SHIFT_GAMES='bl3 bl4 blps bl2 bl1 ttw' \
   -e SHIFT_PLATFORMS='epic xboxlive psn nintendo' \
   -e SHIFT_ARGS='--schedule -v' \
   -e TZ='America/Chicago' \
@@ -148,7 +149,7 @@ services:
       - SHIFT_PLATFORMS=epic xboxlive psn
       - SHIFT_USER=<username>
       - SHIFT_PASS=<password>
-      - SHIFT_GAMES=bl3 blps bl2 bl1 ttw gdfll
+      - SHIFT_GAMES=bl3 bl4 blps bl2 bl1 ttw gdfll
       - SHIFT_ARGS=--schedule -v
 ```
 ## Kubernetes Usage:
@@ -206,7 +207,7 @@ spec:
             - name: SHIFT_ARGS
               value: "--schedule 6 -v"
             - name: SHIFT_GAMES
-              value: "bl3 blps bl2 bl1 ttw"
+              value: "bl3 bl4 blps bl2 bl1 ttw"
             - name: TZ
               value: "Australia/Sydney"
           resources:
@@ -268,6 +269,7 @@ Example: `blps` or `bl bl2 bl3`
 |Borderlands 2|`bl2`|
 |Borderlands: The Pre-Sequel|`blps`|
 |Borderlands 3|`bl3`|
+|Borderlands 4|`bl4`|
 |Tiny Tina's Wonderlands|`ttw`|
 |Godfall|`gdfll`|
 
