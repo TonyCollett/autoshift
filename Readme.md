@@ -2,13 +2,23 @@
 
 - **Compatibility:** 3.9+.
 - **Platform:** Crossplatform.
-- **Version:** 1.1.0
-- **Repo:** https://github.com/Fabbi/autoshift
+- **Repo:** https://github.com/TonyCollett/autoshift forked from https://github.com/ugoogalizer/autoshift forked from https://github.com/Fabbi/autoshift
 
 # Overview
+ 
+Data provided by Mental Mars' Websites via this [shiftcodes.json](https://raw.githubusercontent.com/TonyCollett/autoshift-codes/main/shiftcodes.json) file that is updated reguarly by an instance of [this scraper](https://github.com/TonyCollett/autoshift-scraper).  You don't need to run the scraper as well, only this `autoshift` script/container.  This is to reduce the burden on the Mental Mars website given the great work they're doing to make this possible.<br>
 
-Data provided by [Orcicorn's SHiFT and VIP Code archive](https://shift.orcicorn.com/shift-code/).<br>
+This documentation intended to be temporary until Issue [#53](https://github.com/Fabbi/autoshift/issues/53) and PR [#54](https://github.com/Fabbi/autoshift/pull/54) in the the upstream [autoshift by Fabbi](https://github.com/Fabbi/autoshift/) is merged in.
+
 `autoshift` detects and memorizes new games and platforms added to the orcicorn shift key database.
+
+Games currently maintained by mental mars that are scraped and made available to `autoshift` are: 
+- [Borderlands](https://mentalmars.com/game-news/borderlands-golden-keys/)
+- [Borderlands 2](https://mentalmars.com/game-news/borderlands-2-golden-keys/)
+- [Borderlands 3](https://mentalmars.com/game-news/borderlands-3-golden-keys/)
+- [Borderlands 4](https://mentalmars.com/game-news/borderlands-4-shift-codes/)
+- [Borderlands The Pre-Sequel](https://mentalmars.com/game-news/bltps-golden-keys/)
+- [Tiny Tina's Wonderlands](https://mentalmars.com/game-news/tiny-tinas-wonderlands-shift-codes)
 
 To see which games and platforms are supported use the `auto.py --help` command.
 
@@ -22,7 +32,7 @@ You can choose to only redeem mods/skins etc, only golden keys or both. There is
 ## Installation
 
 ```sh
-git clone git@github.com:Fabbi/autoshift.git
+git clone git@github.com:TonyCollett/autoshift.git
 ```
 
 or download it as zip
@@ -107,29 +117,29 @@ This one is the commandline interface you call to use this tool.
 
 Available as a docker image based on `python3.10-buster`
 
-## Usage
+## Docker Usage
 
-```
+``` bash
 docker run \
   --restart=always \
   -e SHIFT_USER='<username>' \
   -e SHIFT_PASS='<password>' \
-  -e SHIFT_GAMES='bl3 blps bl2 bl1 ttw' \
-  -e SHIFT_PLATFORMS='epic xboxlive psn' \
+  -e SHIFT_GAMES='bl3 bl4 blps bl2 bl1 ttw' \
+  -e SHIFT_PLATFORMS='epic xboxlive psn nintendo' \
   -e SHIFT_ARGS='--schedule -v' \
   -e TZ='America/Chicago' \
   -v autoshift:/autoshift/data \
-  fabianschweinfurth/autoshift:latest
+  TonyCollett/autoshift:latest
 ```
 
-Compose:
+## Docker Compose Usage:
 
-```
+``` yaml
 ---
 version: "3.0"
 services:
   autoshift:
-    image: fabianschweinfurth/autoshift:latest
+    image: TonyCollett/autoshift:latest
     container_name: autoshift_all
     restart: always
     volumes:
@@ -139,8 +149,97 @@ services:
       - SHIFT_PLATFORMS=epic xboxlive psn
       - SHIFT_USER=<username>
       - SHIFT_PASS=<password>
-      - SHIFT_GAMES=bl3 blps bl2 bl1 ttw gdfll
+      - SHIFT_GAMES=bl3 bl4 blps bl2 bl1 ttw gdfll
       - SHIFT_ARGS=--schedule -v
+```
+## Kubernetes Usage:
+
+After setting up the secrets in K8s first: 
+```bash
+kubectl create namespace autoshift
+kubectl config set-context --current --namespace=autoshift
+kubectl create secret generic autoshift-secret --from-literal=username='XXX' --from-literal=password='XXX'
+
+# To get/check the username and password use: 
+kubectl get secret autoshift-secret -o jsonpath="{.data.username}" | base64 -d
+kubectl get secret autoshift-secret -o jsonpath="{.data.password}" | base64 -d
+```
+Then deploy with something similar to: 
+``` yaml
+
+--- # deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: autoshift
+  name: autoshift
+#  namespace: autoshift
+spec:
+  selector:
+    matchLabels:
+      app: autoshift
+  revisionHistoryLimit: 0
+  template:
+    metadata:
+      labels:
+        app: autoshift
+    spec:
+      containers:
+        - name: autoshift
+          # Fix version so it doesn't auto-update
+          #image: fabianschweinfurth/autoshift@sha256:4cc0232e371f574c992fa7df3290f3fd037f4c36e4cc00c79f8228634bb08550
+          image: TonyCollett/autoshift/autoshift:1.8
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SHIFT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: autoshift-secret
+                  key: username
+            - name: SHIFT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: autoshift-secret
+                  key: password
+            - name: SHIFT_PLATFORMS
+              value: "epic steam"
+            - name: SHIFT_ARGS
+              value: "--schedule 6 -v"
+            - name: SHIFT_GAMES
+              value: "bl3 bl4 blps bl2 bl1 ttw"
+            - name: TZ
+              value: "Australia/Sydney"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 500Mi
+            limits:
+              cpu: "100m"
+              memory: "500Mi"
+          volumeMounts:
+            - mountPath: /autoshift/data
+              name: autoshift-pv
+      volumes:
+        - name: autoshift-pv
+          # If this is NFS backed, you may have to add the nolock mount option to the storage class
+          persistentVolumeClaim:
+            claimName: autoshift-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+# If this is NFS backed, you may have to add the nolock mount option to the storage class
+metadata:
+  name: autoshift-pvc
+#  namespace: autoshift
+spec:
+  storageClassName: managed-nfs-storage-retain
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+
 ```
 
 ## Variables
@@ -170,6 +269,7 @@ Example: `blps` or `bl bl2 bl3`
 |Borderlands 2|`bl2`|
 |Borderlands: The Pre-Sequel|`blps`|
 |Borderlands 3|`bl3`|
+|Borderlands 4|`bl4`|
 |Tiny Tina's Wonderlands|`ttw`|
 |Godfall|`gdfll`|
 
@@ -188,6 +288,7 @@ Example: `xbox` or `xbox ps`
 |Xbox|`xboxlive`|
 |Playstation|`psn`|
 |Stadia|`stadia`|
+|Nintendo|`nintendo`|
 
 
 #### **SHIFT_ARGS** (optional)
@@ -213,6 +314,10 @@ Default: `America/Chicago`
 
 Example: `Europe/London`
 
+## CI/CD
+
+Docker images are automatically built and pushed to the GitHub Container Registry (GHCR) on every push to the `main` branch and on new releases. You can pull the latest image from `ghcr.io/TonyCollett/autoshift:latest`.
+
 ## Building Docker Image
 
 ``` bash
@@ -220,7 +325,7 @@ docker build -t autoshift:latest .
 
 ```
 
-## Building Docker Image and Pushing to local Harbor
+## Building Docker Image and Pushing to local Harbor and/or Docker Hub
 
 ``` bash
 
@@ -252,10 +357,10 @@ docker push ${HARBORURL}:443/autoshift/autoshift:latest
 docker push ${HARBORURL}:443/autoshift/autoshift:${VERSIONTAG}
 
 #Tag and Push the image to public docker hub repo
-docker login -u ugoogalizer docker.io/ugoogalizer/autoshift
-docker tag ${IMAGE} docker.io/ugoogalizer/autoshift:latest
-docker tag ${IMAGE} docker.io/ugoogalizer/autoshift:${VERSIONTAG}
-docker push docker.io/ugoogalizer/autoshift:latest
-docker push docker.io/ugoogalizer/autoshift:${VERSIONTAG}
+docker login -u TonyCollett docker.io/TonyCollett/autoshift
+docker tag ${IMAGE} docker.io/TonyCollett/autoshift:latest
+docker tag ${IMAGE} docker.io/TonyCollett/autoshift:${VERSIONTAG}
+docker push docker.io/TonyCollett/autoshift:latest
+docker push docker.io/TonyCollett/autoshift:${VERSIONTAG}
 
 ```
